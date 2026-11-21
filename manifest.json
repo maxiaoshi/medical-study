@@ -1,0 +1,57 @@
+{
+  "name": "医学学习平台",
+  "short_name": "医学学习",
+  "description": "诊断学与药理学的学习、复习、刷题、记忆卡片与机制解析，支持离线使用。",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#0E5A5A",
+  "theme_color": "#0E5A5A",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "categories": ["education", "medical", "productivity"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "./assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "今日复习",
+      "short_name": "复习",
+      "url": "./index.html#/review",
+      "description": "按艾宾浩斯曲线复习今天到期的小节"
+    },
+    {
+      "name": "刷题",
+      "short_name": "刷题",
+      "url": "./index.html#/quiz",
+      "description": "进入刷题中心"
+    },
+    {
+      "name": "记忆卡片",
+      "short_name": "卡片",
+      "url": "./index.html#/cards",
+      "description": "翻转卡片，三键评分"
+    }
+  ]
+}

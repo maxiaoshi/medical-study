@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>医学学习平台 · 诊断学 / 药理学</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
+<meta name="description" content="医学学习平台：诊断学与药理学双科目独立学习体系，含复习、刷题、记忆卡片与交互式机制图，支持离线安装为桌面 App。">
+<meta name="color-scheme" content="light">
+
+<!-- PWA -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0E5A5A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="医学学习">
+<link rel="apple-touch-icon" sizes="180x180" href="./assets/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./assets/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./assets/icon-512.png">
+
+<link rel="stylesheet" href="./assets/app.css">
+</head>
+<body>
+
+<!-- ===================================================================
+     布局骨架
+     - <768px  ：单列 + 底部 Tab + 目录抽屉
+     - ≥768px  ：两栏网格，左侧「科目卡 + 章节树」常驻
+     - 768~1023：.app.rail 可折叠为图标条
+     =================================================================== -->
+
+<header class="topbar" id="topbar">
+  <button class="icon-btn" id="btnDrawer" aria-label="目录 / 折叠侧栏" title="目录 / 折叠侧栏">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+
+  <div class="brand">
+    <span class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H10a2 2 0 0 1 2 2v13a2.6 2.6 0 0 0-2-1H4z"/>
+        <path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H14a2 2 0 0 0-2 2v13a2.6 2.6 0 0 1 2-1h6z"/>
+        <path d="M12 8v5M9.5 10.5h5" stroke="#F97316"/>
+      </svg>
+    </span>
+    <span class="desk-only">医学学习平台</span>
+  </div>
+
+  <!-- 科目切换：诊断学 / 药理学 两套独立目录 -->
+  <div class="subj-switch" id="subjSwitch" role="tablist" aria-label="科目切换">
+    <button data-subj="diag" role="tab"><span class="dot"></span>诊断学</button>
+    <button data-subj="pharm" role="tab"><span class="dot"></span>药理学</button>
+  </div>
+
+  <div class="grow"></div>
+
+  <div class="searchbox" id="searchBox">
+    <svg class="sicon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+    <input id="searchInput" type="search" placeholder="搜索本平台内容…" autocomplete="off" enterkeyhint="search" aria-label="全站搜索">
+    <button class="sclear" id="searchClear" aria-label="清空搜索" hidden>
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#6A7B78" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+
+  <button class="icon-btn" id="btnSearchToggle" aria-label="搜索">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+  </button>
+  <button class="icon-btn" id="btnRail" aria-label="折叠/展开目录" title="折叠 / 展开目录">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M4 12h10M4 18h10M18 8l-2 4 2 4"/></svg>
+  </button>
+</header>
+
+<div class="app" id="app">
+  <aside class="sidebar" id="sidebar" aria-label="章节目录">
+    <div class="subj-tabs" id="sidebarSubjects"></div>
+    <div class="sb-hd" id="sidebarTitle">章节目录</div>
+    <div id="treeDesktop" style="padding:0 10px 20px"></div>
+  </aside>
+
+  <main id="main">
+    <div id="bannerHost"></div>
+    <div id="view"></div>
+  </main>
+</div>
+
+<nav class="tabbar" id="tabbar" aria-label="主导航">
+  <button data-tab="learn" class="on">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H10a2 2 0 0 1 2 2v13a2.6 2.6 0 0 0-2-1H4z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H14a2 2 0 0 0-2 2v13a2.6 2.6 0 0 1 2-1h6z"/></svg>
+    <span class="dot"></span>学习
+  </button>
+  <button data-tab="review">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/></svg>
+    <span class="dot"></span>复习
+  </button>
+  <button data-tab="quiz">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l2.2 2.2L15 9.5"/><rect x="4" y="4" width="16" height="16" rx="3.4"/></svg>
+    <span class="dot"></span>刷题
+  </button>
+  <button data-tab="me">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 20c.9-3.7 3.8-5.6 7.2-5.6s6.3 1.9 7.2 5.6"/></svg>
+    <span class="dot"></span>我的
+  </button>
+</nav>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="章节目录抽屉" aria-hidden="true">
+  <div class="dr-hd">
+    <span>科目与目录</span>
+    <button class="icon-btn" id="btnDrawerClose" aria-label="关闭目录">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="dr-bd" id="treeMobile"></div>
+</aside>
+
+<div class="sheet" id="sheet" aria-hidden="true">
+  <div class="sh-grip"></div>
+  <div class="sh-hd">
+    <h3 id="sheetTitle">详情</h3>
+    <button class="icon-btn" id="btnSheetClose" aria-label="关闭">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="sh-bd" id="sheetBody"></div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ====== 数据层 ====== -->
+<script src="./data/pharm-outline.js"></script>
+<script src="./data/content-diag.js"></script>
+<script src="./data/content-diag-2.js"></script>
+<script src="./data/content-diag-3.js"></script>
+<script src="./data/content-pharm.js"></script>
+<script src="./data/content-pharm-2.js"></script>
+<script src="./data/content-pharm-3.js"></script>
+<script src="./data/content-diag-4.js"></script>
+<script src="./data/content-diag-5.js"></script>
+<script src="./data/content-pharm-4.js"></script>
+<script src="./data/content-pharm-5.js"></script>
+<script src="./data/content-extra-final.js"></script>
+<script src="./data/content-final-2.js"></script>
+<script src="./data/content.js"></script>
+<script src="./data/questions-diag-1.js"></script>
+<script src="./data/questions-diag-2.js"></script>
+<script src="./data/questions-pharm-1.js"></script>
+<script src="./data/questions-pharm-2.js"></script>
+<script src="./data/videos.js"></script>
+<script src="./data/mech.js"></script>
+<script src="./data/mech-2.js"></script>
+<!-- 机制图挂载层：必须在 content.js 之后 -->
+<script src="./data/mech-links.js"></script>
+
+<!-- ====== 应用引擎 ====== -->
+<script src="./assets/app.js"></script>
+</body>
+</html>
