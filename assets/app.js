@@ -64,6 +64,8 @@
     notes: {},
     videos: {},
     examDate: '',
+    examDates: { diag: '', pharm: '' },
+    night: false,
     mechStep: {},
     installTipDismissed: false,
     lastSection: '',
@@ -367,6 +369,19 @@
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', subjectId === 'pharm' ? '#2B4C7E' : '#0E5A5A');
   }
+  function applyNight() {
+    const on = !!S.night;
+    document.body.classList.toggle('night', on);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', on ? '#121A19' : (R.subject === 'pharm' ? '#2B4C7E' : '#0E5A5A'));
+    const b = $('#btnNight');
+    if (b) {
+      b.setAttribute('title', on ? '切换到白天模式' : '切换到黑夜模式');
+      b.innerHTML = on
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.2A8.6 8.6 0 0 1 9.8 3.5a8.6 8.6 0 1 0 10.7 10.7z"/></svg>';
+    }
+  }
   /* 「第一科」判定：首次进入（无任何学习记录）时总是先落到诊断学 */
   function preferredSubject() {
     const stored = S.activeSubject;
@@ -556,16 +571,19 @@
     const wc = weakChapters(subj).slice(0, 3);
     const lastSec = S.lastSubjectSection && S.lastSubjectSection[subj];
 
+    // 双科目独立倒计时
     let cd = '';
-    if (S.examDate) {
-      const dd = Math.ceil((new Date(S.examDate + 'T08:00:00') - new Date()) / 86400000);
-      if (dd >= 0) {
-        cd = '<div class="card" style="margin-bottom:12px"><div class="card-hd"><h3>期末考试倒计时</h3><button class="btn btn-sm btn-accent" data-goto="#/sprint">冲刺</button></div>' +
-          '<div class="countdown"><div class="cd"><b>' + dd + '</b><span>天</span></div>' +
-          '<div class="cd"><b>' + due.length + '</b><span>待复习</span></div>' +
-          '<div class="cd"><b>' + Object.keys(S.wrong).filter((k) => !S.wrong[k].done).length + '</b><span>错题</span></div>' +
-          '<div class="cd"><b>' + streak + '</b><span>打卡</span></div></div></div>';
-      }
+    const dates = S.examDates || {};
+    const dCnt = dates.diag ? Math.ceil((new Date(dates.diag + 'T08:00:00') - new Date()) / 86400000) : null;
+    const pCnt = dates.pharm ? Math.ceil((new Date(dates.pharm + 'T08:00:00') - new Date()) / 86400000) : null;
+    if ((dCnt !== null && dCnt >= 0) || (pCnt !== null && pCnt >= 0)) {
+      cd = '<div class="card" style="margin-bottom:12px"><div class="card-hd"><h3>期末考试倒计时</h3><button class="btn btn-sm btn-ghost" data-goto="#/me">设置</button></div>' +
+        '<div class="duo-count">' +
+        '<div class="dc-box"><div class="nm">诊断学</div><div class="dd">' + (dCnt !== null && dCnt >= 0 ? dCnt : '—') + '<span style="font-size:.45em"> 天</span></div>' +
+        '<div class="dt">' + (dates.diag || '未设置') + '</div></div>' +
+        '<div class="dc-box"><div class="nm">药理学</div><div class="dd">' + (pCnt !== null && pCnt >= 0 ? pCnt : '—') + '<span style="font-size:.45em"> 天</span></div>' +
+        '<div class="dt">' + (dates.pharm || '未设置') + '</div></div>' +
+        '</div></div>';
     }
 
     const resume = lastSec && IDX.sections[lastSec]
@@ -601,10 +619,10 @@
       '</div>' +
 
       '<div class="card"><div class="card-hd"><h3>本科目快捷入口</h3></div><div class="grid grid-2">' +
-      '<button class="list-item" data-goto="#/quiz"><span class="grow"><span class="t">刷题中心</span><span class="s">章节 / 随机 / 错题</span></span></button>' +
-      '<button class="list-item" data-goto="#/review"><span class="grow"><span class="t">今日复习</span><span class="s">艾宾浩斯 1/2/4/7/15 天</span></span></button>' +
-      '<button class="list-item" data-goto="#/cards"><span class="grow"><span class="t">记忆卡片</span><span class="s">翻转 + 三键评分</span></span></button>' +
-      '<button class="list-item" data-goto="#/me"><span class="grow"><span class="t">我的笔记</span><span class="s">按章节 / 视频归档</span></span></button>' +
+      '<button class="quick-card q1" data-goto="#/quiz"><span class="qi">✎</span><span><span class="qt">刷题中心</span><span class="qs">章节 / 随机 / 错题</span></span></button>' +
+      '<button class="quick-card q2" data-goto="#/review"><span class="qi">↻</span><span><span class="qt">今日复习</span><span class="qs">艾宾浩斯 1/2/4/7/15</span></span></button>' +
+      '<button class="quick-card q3" data-goto="#/cards"><span class="qi">▣</span><span><span class="qt">记忆卡片</span><span class="qs">翻转 + 三键评分</span></span></button>' +
+      '<button class="quick-card q4" data-goto="#/me"><span class="qi">☰</span><span><span class="qt">我的笔记</span><span class="qs">按章节 / 视频归档</span></span></button>' +
       '</div></div>' +
       '</div>';
   }
@@ -848,7 +866,8 @@
   }
 
   /* ================= 13. 复习模式 ================= */
-  const reviewState = { active: false, mode: 'standard', list: [], idx: 0 };
+  const reviewState = { active: false, mode: 'standard', list: [], idx: 0, mechPage: 0 };
+  const MECH_PER_PAGE = 8;
 
   function viewReview() {
     const subj = R.subject;
@@ -873,10 +892,24 @@
       '<button class="card card-tap" data-goto="#/cards"><div class="card-hd"><h3>记忆卡片</h3><span class="chip st-learning">' + dueCardsN + '</span></div><div style="font-size:var(--fs-xs);color:var(--c-ink-3)">今日到期的翻转卡片</div></button>' +
       '</div>' +
 
-      '<div class="card" style="margin-bottom:12px"><div class="card-hd"><h3>机制图库</h3><span class="chip st-unlearned">' + MECHS.length + ' 张</span></div>' +
-      '<div class="grid grid-2">' + MECHS.slice(0, 6).map((m) =>
-        '<button class="list-item" data-open-mech="' + m.id + '"><span class="grow"><span class="t">' + esc(m.title) + '</span><span class="s">' + m.nodes.length + ' 个环节</span></span></button>').join('') +
-      '</div></div>' +
+      // 机制图库（分页）
+      (function () {
+        const totalPages = Math.ceil(MECHS.length / MECH_PER_PAGE);
+        const page = clamp(reviewState.mechPage, 0, totalPages - 1);
+        reviewState.mechPage = page;
+        const slice = MECHS.slice(page * MECH_PER_PAGE, (page + 1) * MECH_PER_PAGE);
+        return '<div class="card" style="margin-bottom:12px"><div class="card-hd"><h3>机制图库</h3><span class="chip st-unlearned">' + MECHS.length + ' 张</span></div>' +
+          '<div class="mech-grid">' + slice.map((m) =>
+            '<button class="list-item" style="margin-bottom:0" data-open-mech="' + m.id + '"><span class="grow"><span class="t">' + esc(m.title) + '</span>' +
+            '<span class="s">' + m.nodes.length + ' 个环节</span></span>' +
+            '<svg class="go" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg></button>').join('') + '</div>' +
+          (totalPages > 1 ? '<div class="mech-pager">' +
+            '<button class="btn btn-sm btn-plain" data-mech-page="-1"' + (page === 0 ? ' disabled' : '') + '>上一页</button>' +
+            '<span class="pnum">' + (page + 1) + ' / ' + totalPages + '</span>' +
+            '<button class="btn btn-sm btn-plain" data-mech-page="1"' + (page >= totalPages - 1 ? ' disabled' : '') + '>下一页</button>' +
+            '</div>' : '') +
+          '</div>';
+      })() +
 
       '<div class="card"><div class="card-hd"><h3>待复习清单</h3><span class="chip ' + (due.length ? 'st-weak' : 'st-mastered') + '">' + (due.length ? '需复习' : '已清空') + '</span></div>' +
       (due.length
@@ -993,7 +1026,7 @@
     const done = qz.submitted[q.id];
     const left = qz.limitMin ? qz.limitMin * 60 - Math.floor((Date.now() - qz.startedAt) / 1000) : 0;
 
-    return '<div class="view"><div class="card">' +
+    return '<div class="view quiz-page"><div class="card">' +
       '<div class="q-meta"><span class="chip st-unlearned">第 ' + (qz.idx + 1) + ' / ' + total + ' 题</span>' +
       (q.diff ? '<span class="chip st-unlearned">难度 ' + '★'.repeat(q.diff) + '</span>' : '') +
       (qz.limitMin ? '<span class="chip st-weak">⏱ <b id="qzTimer">' + mmss(left) + '</b></span>' : '') +
@@ -1005,7 +1038,7 @@
       (done ? '<div class="explain"><div class="eh">' + (picked === q.a ? '<span class="ok">✓ 回答正确</span>' : '<span class="no">✗ 回答错误，正确答案 ' + 'ABCDE'[q.a] + '</span>') + '</div>' + inline(q.e) +
         '<div class="src">出处：' + esc(q.src || '') + (q.tag && q.tag.length ? ' · 考点：' + esc(q.tag.join('、')) : '') + '</div></div>' : '') +
       '</div>' +
-      '<div class="bottom-bar in-tabs">' +
+      '<div class="bottom-bar">' +
       '<button class="btn btn-plain btn-sm" data-qzprev' + (qz.idx === 0 ? ' disabled' : '') + '>上一题</button>' +
       '<div class="grow"></div>' +
       '<span style="font-size:var(--fs-xs);color:var(--c-ink-3)">✓' + qz.right + ' ✗' + qz.wrong + '</span>' +
@@ -1083,7 +1116,7 @@
       '<div class="flip-wrap"><div class="flip' + (cardUI.flipped ? ' on' : '') + '" id="flipCard">' +
       '<div class="face front"><div class="cat">' + esc(sec ? sec.chapterName : '') + '</div>' +
       '<div class="term">' + esc(c.f) + '</div><div class="hint">点击卡片翻面</div></div>' +
-      '<div class="face back"><div class="pt">' + inline(c.b) + '</div><div class="hint">点击返回正面</div></div>' +
+      '<div class="face back"><span class="back-tag">核心要点</span><div class="pt">' + inline(c.b) + '</div><div class="hint">点击返回正面</div></div>' +
       '</div></div>' +
       '<div class="rate-row"><button class="btn btn-plain" data-crate="0">不认识</button><button class="btn btn-plain" data-crate="1">模糊</button><button class="btn" data-crate="2">认识</button></div>' +
       '<div style="display:flex;gap:9px;margin-top:10px"><button class="btn btn-plain btn-sm" data-cprev>上一张</button><div style="flex:1"></div><button class="btn btn-plain btn-sm" data-cnext>下一张</button></div>' +
@@ -1280,8 +1313,9 @@
       '<div class="stat-tile"><div class="k">已看视频</div><div class="v">' + Object.keys(S.videos).filter((k) => S.videos[k].watched).length + '<small>个</small></div></div>' +
       '</div>' +
 
-      '<div class="card" style="margin-bottom:12px"><div class="card-hd"><h3>期末考试日期</h3><span class="chip st-learning">冲刺倒计时</span></div>' +
-      '<div class="field"><input type="date" id="examDate" value="' + esc(S.examDate) + '"></div>' +
+      '<div class="card" style="margin-bottom:12px"><div class="card-hd"><h3>期末考试日期（双科目）</h3><span class="chip st-learning">首页倒计时</span></div>' +
+      '<div class="field"><label>诊断学考试日期</label><input type="date" id="examDiag" value="' + esc((S.examDates || {}).diag || '') + '"></div>' +
+      '<div class="field"><label>药理学考试日期</label><input type="date" id="examPharm" value="' + esc((S.examDates || {}).pharm || '') + '"></div>' +
       '<div style="display:flex;gap:9px"><button class="btn btn-sm" data-saveexam>保存</button><button class="btn btn-sm btn-plain" data-goto="#/sprint">进入冲刺模式</button></div></div>' +
 
       '<div class="card" style="margin-bottom:12px"><div class="card-hd"><h3>我的笔记</h3><span class="chip st-unlearned">' + notesArr.length + ' 条</span></div>' +
@@ -1477,10 +1511,13 @@
     const subj = R.subject;
     S.activeSubject = subj;
     applyTheme(subj);
+    applyNight();
 
     // 状态一致性：复习/答题退出时重置
     if (R.route !== 'review') reviewState.active = false;
     if (R.route !== 'quiz' && qz.active && !qz.ids.length) qz.active = false;
+    // 答题时隐藏底部 Tab，让提交栏真正贴底
+    document.body.classList.toggle('quiz-mode', !!(qz.active && R.route === 'quiz'));
 
     const host = $('#view');
     let html = '';
@@ -1574,6 +1611,7 @@
     R.subject = subj;
     S.activeSubject = subj;
     applyTheme(subj);
+    applyNight();
     treeSig = '';
     cardUI.list = null;
     // 切换科目后退回该科目首页，由「继续学习」卡片承接断点
@@ -1601,6 +1639,15 @@
 
     // 科目切换
     $$('#subjSwitch button').forEach((b) => b.addEventListener('click', () => switchSubject(b.dataset.subj)));
+
+    // 黑夜模式
+    const bn = $('#btnNight');
+    if (bn) bn.addEventListener('click', () => {
+      S.night = !S.night;
+      save(true);
+      applyNight();
+      toast(S.night ? '已切换到黑夜模式' : '已切换到白天模式');
+    });
 
     // 搜索
     const input = $('#searchInput');
@@ -1863,16 +1910,36 @@
         const sid = cardgo.dataset.cardgo;
         const i = cardUI.list.findIndex((c) => c.sec === sid);
         cardUI.idx = Math.max(0, i); cardUI.flipped = false; render();
+        // 自动上滑到卡片处
+        setTimeout(() => {
+          const fw = $('.flip-wrap');
+          if (fw) fw.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 80);
         return;
       }
 
+      const mechPageBtn = t.closest('[data-mech-page]');
+      if (mechPageBtn) {
+        reviewState.mechPage += +mechPageBtn.dataset.mechPage;
+        render();
+        return;
+      }
       // 机制图库
       const openM = t.closest('[data-open-mech]');
       if (openM) { openMechLibrary(openM.dataset.openMech); return; }
 
       // 我的 / 统计 / 冲刺
       const saveExam = t.closest('[data-saveexam]');
-      if (saveExam) { S.examDate = ($('#examDate') || {}).value || ''; save(true); render(); toast(S.examDate ? '已设置考试日期' : '已清除'); return; }
+      if (saveExam) {
+        S.examDates = {
+          diag: ($('#examDiag') || {}).value || '',
+          pharm: ($('#examPharm') || {}).value || ''
+        };
+        save(true);
+        render();
+        toast('考试日期已保存');
+        return;
+      }
       const exportBtn = t.closest('[data-export]');
       if (exportBtn) {
         const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
@@ -2045,6 +2112,25 @@
     if (top) top.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
+  /* 视频全屏退出后恢复滚动（iOS/Android WebView 全屏会锁死 body 滚动） */
+  function releaseFullscreenLock() {
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
+  }
+  function initFullscreenFix() {
+    ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach((evt) => {
+      document.addEventListener(evt, () => {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+          setTimeout(releaseFullscreenLock, 120);
+        }
+      });
+    });
+    window.addEventListener('pageshow', (e) => { if (e.persisted) releaseFullscreenLock(); });
+    window.addEventListener('focus', releaseFullscreenLock);
+  }
+
   /* ================= 22. PWA ================= */
   let deferredPrompt = null, waitingSW = null;
   function banner(html, id) {
@@ -2113,6 +2199,7 @@
   /* ================= 23. 启动 ================= */
   function boot() {
     bindGlobal();
+    initFullscreenFix();
     if (!location.hash) location.hash = '#/';
     render();
     initPWA();

@@ -10,7 +10,7 @@
  *      页面顶部提示"有新版本，点击更新"，由用户主动刷新（不强制刷新以免打断答题）。
  * ===================================================================== */
 
-const VERSION = 'v2.4.0';
+const VERSION = 'v2.6.0';
 const CACHE_STATIC = 'med-static-' + VERSION;
 const CACHE_PAGE = 'med-page-' + VERSION;
 
@@ -44,6 +44,8 @@ const PRECACHE = [
   './data/questions-diag-2.js',
   './data/questions-pharm-1.js',
   './data/questions-pharm-2.js',
+  './data/questions-diag-522.js',
+  './data/questions-pharm-bank.js',
   './data/videos.js',
   './data/mech.js',
   './data/mech-2.js',
